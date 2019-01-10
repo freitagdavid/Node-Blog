@@ -8,6 +8,8 @@ const server = express();
 server.use(cors());
 server.use(express.json());
 
+// Get all users
+
 server.get('/api/users', async (req, res) => {
     try {
         const usersGet = await users.get();
@@ -17,6 +19,8 @@ server.get('/api/users', async (req, res) => {
         res.status(500).json(err);
     }
 });
+
+// Create new user
 
 server.post('/api/users', (req, res) => {
     const user = req.body;
@@ -41,6 +45,8 @@ server.post('/api/users', (req, res) => {
             });
     }
 });
+
+//  Update user by id
 
 server.put('/api/users/:id', (req, res) => {
     const { id } = req.params;
@@ -67,9 +73,10 @@ server.put('/api/users/:id', (req, res) => {
         });
 });
 
+// Delete user by id
+
 server.delete('/api/users/:id', (req, res) => {
     const { id } = req.params;
-
     users
         .remove(id)
         .then(removedUser => {
@@ -87,11 +94,46 @@ server.delete('/api/users/:id', (req, res) => {
         });
 });
 
-server.get('/api/posts', (req, res) => {});
+server.get('/api/posts', async (req, res) => {
+    try {
+        const postList = await posts.get();
+        res.status(200).json({ postList });
+    } catch (err) {
+        res.status(500).json(err);
+    }
+});
 
-server.post('/api/posts', (req, res) => {});
+server.post('/api/:userId/posts/post', async (req, res) => {
+    const { text } = req.body;
+    const { userId } = req.params;
 
-server.put('/api/posts/:id', (req, res) => {});
+    console.log(userId);
+
+    const user = await users.get(userId);
+
+    if (!user) {
+        res.status(404).json({ errMessage: 'User does not exist' });
+        return;
+    }
+
+    if (!text) {
+        res.status(400).json({ errMessage: 'Please provide text' });
+        return;
+    }
+
+    posts
+        .insert({ text: text, userId: userId })
+        .then(result => {
+            posts.get(result.id).then(post => {
+                res.status(400).json({ post });
+            });
+        })
+        .catch(err => {
+            res.status(500).json({ errMessage: 'Message not posted' });
+        });
+});
+
+server.put('/api/:userId/posts/:id', (req, res) => {});
 
 server.delete('/api/posts/:id', (req, res) => {});
 
