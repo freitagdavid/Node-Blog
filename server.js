@@ -111,13 +111,13 @@ server.post('/api/:userId/posts/post', async (req, res) => {
 
     const user = await users.get(userId);
 
-    if (!user) {
-        res.status(404).json({ errMessage: 'User does not exist' });
+    if (!text) {
+        res.status(400).json({ errMessage: 'Please provide text' });
         return;
     }
 
-    if (!text) {
-        res.status(400).json({ errMessage: 'Please provide text' });
+    if (!user) {
+        res.status(404).json({ errMessage: 'User does not exist' });
         return;
     }
 
@@ -133,7 +133,30 @@ server.post('/api/:userId/posts/post', async (req, res) => {
         });
 });
 
-server.put('/api/:userId/posts/:id', (req, res) => {});
+server.put('/api/posts/:id', async (req, res) => {
+    const { id } = req.params;
+    const { postUpdate } = req.body;
+
+    const post = await posts.get(id);
+
+    if (!postUpdate) {
+        res.status(400).json({
+            errMessage: 'Please include both a userId and text content',
+        });
+        return;
+    }
+
+    if (!postUpdate.userId && !postUpdate.text) {
+        res.status(400).json({
+            errMessage: 'Please include both a userId and text content',
+        });
+        return;
+    }
+
+    if (!post) {
+        res.status().json({ errMessage: 'Post by this ID does not exist' });
+    }
+});
 
 server.delete('/api/posts/:id', (req, res) => {});
 
